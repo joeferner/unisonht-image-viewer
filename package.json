@@ -1,0 +1,25 @@
+{
+  "name": "unisonht-image-viewer",
+  "version": "1.0.0",
+  "description": "UnisonHT Plugin Image Viewer",
+  "main": "index.js",
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joeferner/unisonht-image-viewer.git"
+  },
+  "keywords": [
+    "unisonht",
+    "tivo"
+  ],
+  "author": "Joe Ferner <joe@fernsroth.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/joeferner/unisonht-image-viewer/issues"
+  },
+  "homepage": "https://github.com/joeferner/unisonht-image-viewer#readme",
+  "dependencies": {
+    "unisonht": "^1.0.0"
+  }
+}
