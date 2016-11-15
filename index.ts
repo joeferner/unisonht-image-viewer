@@ -2,7 +2,7 @@ import {Device, DeviceOptions} from "unisonht/lib/Device";
 
 interface ImageViewerOptions extends DeviceOptions {
   images: {
-    [key: string];
+    [key: string]: string;
   }
 }
 
