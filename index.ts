@@ -60,7 +60,7 @@ export default class ImageViewer extends Device {
 
   private bringWindowToTopAsync(windowString: string): Promise<void> {
     const intervalTimer = setInterval(()=> {
-      lastPromise = this.run('wmctrl', ['-R', windowString]);
+      this.run('wmctrl', ['-R', windowString]);
     }, 100);
     setTimeout(()=> {
       clearInterval(intervalTimer);
