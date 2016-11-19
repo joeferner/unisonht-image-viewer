@@ -25,14 +25,6 @@ export default class ImageViewer implements UnisonHTDevice {
     return Promise.resolve();
   }
 
-  start(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  stop(): Promise<void> {
-    return Promise.resolve();
-  }
-
   buttonPress(button: string): Promise<void> {
     const image = this.findImageFromButton(button);
     if (image) {
