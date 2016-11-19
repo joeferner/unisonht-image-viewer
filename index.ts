@@ -1,32 +1,44 @@
-import {Device, DeviceOptions} from "unisonht/lib/Device";
+import {UnisonHTDevice} from "unisonht";
 import * as path from "path";
 import * as child_process from "child_process";
 import createLogger from "unisonht/lib/Log";
 const log = createLogger('image-viewer');
 
-interface ImageViewerOptions extends DeviceOptions {
-  images: {
-    [key: string]: string;
-  }
-}
-
-export default class ImageViewer extends Device {
-  private options: ImageViewerOptions;
+export default class ImageViewer implements UnisonHTDevice {
+  private options: ImageViewer.Options;
   private lastXMouseMove: number;
 
-  constructor(options: ImageViewerOptions) {
-    super(options);
+  constructor(options: ImageViewer.Options) {
     this.lastXMouseMove = 0;
     this.options = options;
   }
 
+  getName(): string {
+    return this.options.name;
+  }
+
+  ensureOn(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  ensureOff(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  start(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  stop(): Promise<void> {
+    return Promise.resolve();
+  }
 
   buttonPress(button: string): Promise<void> {
     const image = this.findImageFromButton(button);
     if (image) {
       return this.displayImage(image);
     }
-    return super.buttonPress(button);
+    return Promise.reject(new Error('Invalid button: ' + button));
   }
 
   private findImageFromButton(button: string) {
@@ -96,5 +108,14 @@ export default class ImageViewer extends Device {
         log.debug(`grep stderr: ${data}`);
       });
     });
+  }
+}
+
+module ImageViewer {
+  export interface Options {
+    name: string;
+    images: {
+      [key: string]: string;
+    }
   }
 }
