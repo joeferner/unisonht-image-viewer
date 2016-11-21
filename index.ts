@@ -50,7 +50,7 @@ export default class ImageViewer implements UnisonHTDevice {
   }
 
   private runPqiv(image: string): Promise<void> {
-    return this.run('pqiv', ['-fit', image]);
+    return this.run('pqiv', ['-fit', image], false);
   }
 
   private wakeUp(): Promise<void> {
@@ -59,12 +59,12 @@ export default class ImageViewer implements UnisonHTDevice {
       this.lastXMouseMove = 0;
     }
 
-    return this.run('xdotool', ['mousemove', this.lastXMouseMove, 0]);
+    return this.run('xdotool', ['mousemove', this.lastXMouseMove, 0], true);
   }
 
   private bringWindowToTopAsync(windowString: string): Promise<void> {
     const intervalTimer = setInterval(()=> {
-      this.run('wmctrl', ['-R', windowString]);
+      this.run('wmctrl', ['-R', windowString], true);
     }, 100);
     setTimeout(()=> {
       clearInterval(intervalTimer);
@@ -72,22 +72,15 @@ export default class ImageViewer implements UnisonHTDevice {
     return Promise.resolve();
   }
 
-  private run(command: string, args: (any)[]) {
+  private run(command: string, args: (any)[], waitForExit: boolean) {
     return new Promise((resolve, reject)=> {
       const options = {
         env: {
           DISPLAY: ':0.0'
         }
       };
+      log.debug(`running ${command} ${args}`);
       const cp = child_process.spawn(command, args, options);
-      cp.on('close', (code)=> {
-        if (code === 0) {
-          return resolve();
-        } else {
-          return reject(new Error(`Failed to run command: ${command} ${args} (code: ${code})`));
-        }
-      });
-
       cp.on('error', (err)=> {
         return reject(new Error(`Failed to run command: ${command} ${args} ${err}`));
       });
@@ -99,6 +92,18 @@ export default class ImageViewer implements UnisonHTDevice {
       cp.stderr.on('data', (data) => {
         log.debug(`grep stderr: ${data}`);
       });
+
+      if (waitForExit) {
+        cp.on('exit', (code)=> {
+          if (code === 0) {
+            return resolve();
+          } else {
+            return reject(new Error(`Failed to run command: ${command} ${args} (code: ${code})`));
+          }
+        });
+      } else {
+        setTimeout(resolve, 500);
+      }
     });
   }
 }
