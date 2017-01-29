@@ -72,8 +72,8 @@ export default class ImageViewer implements UnisonHTDevice {
     return Promise.resolve();
   }
 
-  private run(command: string, args: (any)[], waitForExit: boolean) {
-    return new Promise((resolve, reject)=> {
+  private run(command: string, args: (any)[], waitForExit: boolean): Promise<void> {
+    return new Promise<void>((resolve, reject)=> {
       const options = {
         env: {
           DISPLAY: ':0.0'
