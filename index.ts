@@ -1,36 +1,35 @@
-import {UnisonHTDevice} from "unisonht";
+import {Device} from "unisonht";
+import * as express from "express";
+import * as HttpStatusCodes from "http-status-codes";
 import * as path from "path";
 import * as child_process from "child_process";
-import createLogger from "unisonht/lib/Log";
-const log = createLogger('image-viewer');
 
-export default class ImageViewer implements UnisonHTDevice {
+export default class ImageViewer extends Device {
   private options: ImageViewer.Options;
   private lastXMouseMove: number;
 
-  constructor(options: ImageViewer.Options) {
+  constructor(deviceName: string, options: ImageViewer.Options) {
+    super(deviceName);
     this.lastXMouseMove = 0;
     this.options = options;
   }
 
-  getName(): string {
-    return this.options.name;
+  getStatus(): Promise<Device.Status> {
+    return Promise.resolve({});
   }
 
-  ensureOn(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  ensureOff(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  buttonPress(button: string): Promise<void> {
-    const image = this.findImageFromButton(button);
+  protected handleButtonPress(req: express.Request, res: express.Response, next: express.NextFunction): void {
+    const buttonName = req.query.button;
+    const image = this.findImageFromButton(buttonName);
     if (image) {
-      return this.displayImage(image);
+      this.displayImage(image)
+        .then(() => {
+          res.status(HttpStatusCodes.NO_CONTENT).send();
+        })
+        .catch(next);
+      return;
     }
-    return Promise.reject(new Error('Invalid button: ' + button));
+    res.status(HttpStatusCodes.BAD_REQUEST).send(`Invalid button: ${buttonName}`);
   }
 
   private findImageFromButton(button: string) {
@@ -39,12 +38,12 @@ export default class ImageViewer implements UnisonHTDevice {
 
   private displayImage(image: string): Promise<void> {
     image = path.resolve(image);
-    log.debug('displaying image: %s', image);
+    this.log.debug('displaying image: %s', image);
     return this.runPqiv(image)
-      .then(()=> {
+      .then(() => {
         return this.wakeUp();
       })
-      .then(()=> {
+      .then(() => {
         return this.bringWindowToTopAsync('pqiv');
       });
   }
@@ -63,38 +62,38 @@ export default class ImageViewer implements UnisonHTDevice {
   }
 
   private bringWindowToTopAsync(windowString: string): Promise<void> {
-    const intervalTimer = setInterval(()=> {
+    const intervalTimer = setInterval(() => {
       this.run('wmctrl', ['-R', windowString], true);
     }, 100);
-    setTimeout(()=> {
+    setTimeout(() => {
       clearInterval(intervalTimer);
     }, 5 * 1000);
     return Promise.resolve();
   }
 
   private run(command: string, args: (any)[], waitForExit: boolean): Promise<void> {
-    return new Promise<void>((resolve, reject)=> {
+    return new Promise<void>((resolve, reject) => {
       const options = {
         env: {
           DISPLAY: ':0.0'
         }
       };
-      log.debug(`running ${command} ${args}`);
+      this.log.debug(`running ${command} ${args}`);
       const cp = child_process.spawn(command, args, options);
-      cp.on('error', (err)=> {
+      cp.on('error', (err) => {
         return reject(new Error(`Failed to run command: ${command} ${args} ${err}`));
       });
 
       cp.stdout.on('data', (data) => {
-        log.debug(`${data}`);
+        this.log.debug(`${data}`);
       });
 
       cp.stderr.on('data', (data) => {
-        log.debug(`grep stderr: ${data}`);
+        this.log.debug(`grep stderr: ${data}`);
       });
 
       if (waitForExit) {
-        cp.on('exit', (code)=> {
+        cp.on('exit', (code) => {
           if (code === 0) {
             return resolve();
           } else {
