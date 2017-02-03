@@ -4,7 +4,7 @@ import * as HttpStatusCodes from "http-status-codes";
 import * as path from "path";
 import * as child_process from "child_process";
 
-export default class ImageViewer extends Device {
+export class ImageViewer extends Device {
   private options: ImageViewer.Options;
   private lastXMouseMove: number;
 
@@ -63,7 +63,10 @@ export default class ImageViewer extends Device {
 
   private bringWindowToTopAsync(windowString: string): Promise<void> {
     const intervalTimer = setInterval(() => {
-      this.run('wmctrl', ['-R', windowString], true);
+      this.run('wmctrl', ['-R', windowString], true)
+        .catch((err) => {
+          this.log.error('wmctrl error', err);
+        });
     }, 100);
     setTimeout(() => {
       clearInterval(intervalTimer);
@@ -85,11 +88,11 @@ export default class ImageViewer extends Device {
       });
 
       cp.stdout.on('data', (data) => {
-        this.log.debug(`${data}`);
+        this.log.debug(`stdout: ${data}`);
       });
 
       cp.stderr.on('data', (data) => {
-        this.log.debug(`grep stderr: ${data}`);
+        this.log.debug(`stderr: ${data}`);
       });
 
       if (waitForExit) {
@@ -107,9 +110,8 @@ export default class ImageViewer extends Device {
   }
 }
 
-module ImageViewer {
+export module ImageViewer {
   export interface Options {
-    name: string;
     images: {
       [key: string]: string;
     }
