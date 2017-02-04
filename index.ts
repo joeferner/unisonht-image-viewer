@@ -1,4 +1,4 @@
-import {Device, PromiseResponderResponse} from "unisonht";
+import {Device} from "unisonht";
 import * as express from "express";
 import * as HttpStatusCodes from "http-status-codes";
 import * as path from "path";
@@ -22,7 +22,7 @@ export class ImageViewer extends Device {
     const buttonName = req.query.button;
     const image = this.findImageFromButton(buttonName);
     if (image) {
-      (<PromiseResponderResponse>res).promiseNoContent(this.displayImage(image));
+      res.promiseNoContent(this.displayImage(image));
       return;
     }
     res.status(HttpStatusCodes.BAD_REQUEST).send(`Invalid button: ${buttonName}`);
