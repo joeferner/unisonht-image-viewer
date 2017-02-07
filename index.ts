@@ -1,24 +1,22 @@
-import {Device} from "unisonht";
+import {Device, UnisonHTResponse} from "unisonht";
 import * as express from "express";
 import * as HttpStatusCodes from "http-status-codes";
 import * as path from "path";
 import * as child_process from "child_process";
 
 export class ImageViewer extends Device {
-  private options: ImageViewer.Options;
   private lastXMouseMove: number;
 
   constructor(deviceName: string, options: ImageViewer.Options) {
-    super(deviceName);
+    super(deviceName, options);
     this.lastXMouseMove = 0;
-    this.options = options;
   }
 
   getStatus(): Promise<Device.Status> {
     return Promise.resolve({});
   }
 
-  protected handleButtonPress(req: express.Request, res: express.Response, next: express.NextFunction): void {
+  protected handleButtonPress(req: express.Request, res: UnisonHTResponse, next: express.NextFunction): void {
     const buttonName = req.query.button;
     const image = this.findImageFromButton(buttonName);
     if (image) {
@@ -29,7 +27,7 @@ export class ImageViewer extends Device {
   }
 
   private findImageFromButton(button: string) {
-    return this.options.images[button];
+    return this.getOptions().images[button];
   }
 
   private displayImage(image: string): Promise<void> {
@@ -104,10 +102,14 @@ export class ImageViewer extends Device {
       }
     });
   }
+
+  public getOptions(): ImageViewer.Options {
+    return <ImageViewer.Options>super.getOptions();
+  }
 }
 
 export module ImageViewer {
-  export interface Options {
+  export interface Options extends Device.Options {
     images: {
       [key: string]: string;
     }
